@@ -7,8 +7,8 @@ const fs = require("fs");
 const app = express();
 const server = https.createServer(
   {
-    key: fs.readFileSync("./192.168.1.6-key.pem"),
-    cert: fs.readFileSync("./192.168.1.6.pem"),
+    key: fs.readFileSync("../certificates/localhost-key.pem"),
+    cert: fs.readFileSync("../certificates/localhost.pem"),
   },
   app
 );

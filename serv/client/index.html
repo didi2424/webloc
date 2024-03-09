@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Image Display</title>
+</head>
+<body>
+    <img id="imageElement" width="1158" height="1543">
+    <script>
+        const socket = new WebSocket('wss://192.168.1.6:3001');
+        const imageElement = document.getElementById('imageElement');
+
+        socket.onopen = () => {
+            console.log('WebSocket connected on the client side');
+        };
+
+        const blobUrls = [];
+
+        socket.onmessage = (event) => {
+    const message = event.data;
+
+    if (message === 'revokeBlobURL') {
+        handleRevokeBlobURL();
+    } else {
+        handleNormalMessage(message);
+    }
+};
+
+socket.onerror = (error) => {
+    console.error('WebSocket error:', error);
+};
+
+socket.onclose = () => {
+    console.log('WebSocket connection closed');
+};
+function handleRevokeBlobURL() {
+    console.log('Received signal to revoke Blob URL');
+
+    if (blobUrls.length > 0) {
+        blobUrls.forEach((url) => URL.revokeObjectURL(url));
+        blobUrls.length = 0;
+        console.log('Revoked all Blob URLs');
+        console.log('All associated image elements removed, and main image element updated.');
+    }
+}
+
+function handleNormalMessage(message) {
+    const blob = new Blob([message], { type: 'image/jpeg' });
+    const blobUrl = URL.createObjectURL(blob);
+    blobUrls.push(blobUrl);
+    showCurrentFrame();
+}
+
+function showCurrentFrame() {
+    if (blobUrls.length > 0) {
+        const currentBlobUrl = blobUrls[blobUrls.length - 1];
+        if (imageElement.src) {
+            URL.revokeObjectURL(imageElement.src);
+        }
+        imageElement.src = currentBlobUrl;
+    }
+}
+    </script>
+</body>
+</html>

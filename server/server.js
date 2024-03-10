@@ -4,6 +4,27 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 
+const os = require('os');
+
+function getLocalIP() {
+  const interfaces = os.networkInterfaces();
+  let localIP;
+
+  Object.keys(interfaces).forEach((iface) => {
+    interfaces[iface].forEach((details) => {
+      if (details.family === 'IPv4' && !details.internal) {
+        localIP = details.address;
+      }
+    });
+  });
+
+  return localIP;
+}
+
+const localIPAddress = getLocalIP();
+
+console.log('Local IP Address:', localIPAddress);
+
 const app = express();
 const server = https.createServer(
   {
@@ -46,6 +67,6 @@ wss.on("connection", (ws) => {
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, "192.168.1.6", () => {
+server.listen(PORT, localIPAddress, () => {
   console.log(`Server running on https://192.168.1.6:${PORT}`);
 });

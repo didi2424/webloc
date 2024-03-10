@@ -17,11 +17,15 @@ export default function Camera() {
 
   const [statusCapturingFrame, setStatusCapturingFrame] = useState('');
 
-  const [isChecked, setIsChecked] = useState(false);
-  const handleCheckBoxChange = () => {
-    setIsChecked(!isChecked);
-  }
+  const [isMirror, setIsMirror] = useState(false)
+  const [statusMirror, setStatusMirror] = useState('');
 
+
+  const handleCheckBoxChange = useCallback(() => {
+    setIsMirror(!isMirror)
+    clearCanvas()
+  }, [isMirror]);
+  
   const getAvailableCameras = async () => {
     try {
       // Request user media access
@@ -65,6 +69,7 @@ export default function Camera() {
         });
         if (webcamRef.current) {
           webcamRef.current.srcObject = stream;
+          webcamRef.current.style.transform = isMirror ? 'scaleX(-1)' : 'scaleX(1)';
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
@@ -79,7 +84,7 @@ export default function Camera() {
         stream.getTracks().forEach((track) => track.stop());
       }
     }
-  }, [selectedCamera]);
+  }, [selectedCamera,isMirror]);
 
   const clearCanvas = () => {
     const canvas = document.createElement('canvas');
@@ -92,25 +97,26 @@ export default function Camera() {
     }
   };
 
+
   useEffect(() => {
     const captureAndSendFrame = async () => {
-      if (webcamRef.current && isConnected) {
+      if (webcamRef.current && isConnected && !isMirror) {
         const canvas = document.createElement('canvas');
         canvas.width = webcamRef.current.videoWidth;
         canvas.height = webcamRef.current.videoHeight;
         const ctx = canvas.getContext('2d');
-
+        
         if (ctx) {
           ctx.drawImage(webcamRef.current, 0, 0, canvas.width, canvas.height);
-
+          setStatusMirror(' Not Mirror')
           await new Promise<void>((resolve) => {
             canvas.toBlob((blob) => {
               if (blob && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
                 socketRef.current.send(blob);
                 setStatusCapturingFrame('Sending Frame');
               }
-
               ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.setTransform(1, 0, 0, 1, 0, 0);
               resolve();
             }, 'image/jpeg', 0.82);
           });
@@ -118,21 +124,60 @@ export default function Camera() {
 
         setCaptureTimeout(setTimeout(captureAndSendFrame, 33.33));
       }
+
     };
 
-    if (isConnected) {
-      captureAndSendFrame();
-    } else {
-      setStatusCapturingFrame('Not Sending Frame');
-    }
+    const captureAndSendFrameMirror = async () => {
+      if (webcamRef.current && isConnected && isMirror) {
+        const canvas = document.createElement('canvas');
+        canvas.width = webcamRef.current.videoWidth;
+        canvas.height = webcamRef.current.videoHeight;
+        const ctx = canvas.getContext('2d');
+        
+        if (ctx) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+          ctx.drawImage(webcamRef.current, 0, 0, canvas.width, canvas.height);
+          setStatusMirror('Mirror')
 
+          await new Promise<void>((resolve) => {
+            canvas.toBlob((blob) => {
+              if (blob && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+                socketRef.current.send(blob);
+                setStatusCapturingFrame('Sending Frame');
+              }
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.setTransform(1, 0, 0, 1, 0, 0);
+              resolve();
+            }, 'image/jpeg', 0.82);
+          });
+        }
+
+        setCaptureTimeout(setTimeout(captureAndSendFrameMirror, 33.33));
+      }
+
+    };
+
+    if (isConnected && isMirror) {
+      clearTimeout(captureTimeout);
+      if (!isMirror) {
+        clearTimeout(captureTimeout);
+      }
+      captureAndSendFrameMirror();
+    } else if (isConnected && !isMirror) {
+      clearTimeout(captureTimeout);
+      if (isMirror) {
+        clearTimeout(captureTimeout);
+      }
+      captureAndSendFrame();
+    }
     return () => {
 
       if (captureTimeout) {
         clearTimeout(captureTimeout);
       }
     };
-  }, [isConnected]);
+  }, [isConnected, isMirror]);
 
   const startWebSocket = useCallback(() => {
 
@@ -164,16 +209,7 @@ export default function Camera() {
 
     }
 
-    if (webcamRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = webcamRef.current.videoWidth;
-      canvas.height = webcamRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    }
+    clearCanvas()
 
   }, [captureTimeout, isConnected]);
 
@@ -182,6 +218,7 @@ export default function Camera() {
     if (!isStreaming) {
       setIsConnected(true);
       setIsStreaming(true);
+      
 
       startWebSocket()
     } else {
@@ -192,16 +229,16 @@ export default function Camera() {
   };
 
   return (
-    <div >
+    <div style={{backgroundColor:'black'}} >
 
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
         <video style={{ width: 320, height: 500 }} ref={webcamRef} autoPlay playsInline />
       </div>
 
     <div style={{display:'flex',flexDirection:'row', justifyContent:'space-between',alignContent:'center',alignItems:'center'}}>
-      <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'black',marginTop:20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'black',marginTop:0 }}>
 
-        <h3>Select Cameras:</h3>
+        <h3 style={{color:'white'}}>Select Camera:</h3>
         <select style={{ backgroundColor: '#ccc', color: '#000',fontSize:12,width:180 }} value={selectedCamera} onChange={(e) => handleCameraChange(e.target.value)}>
           {availableCameras.map((camera) => (
             <option key={camera.deviceId} value={camera.deviceId}>
@@ -219,14 +256,14 @@ export default function Camera() {
       </div>
 
       <div>
-        <label>
+        <label style={{color:'white'}}>
           <input
             type="checkbox"
-            checked={isChecked}
+            checked={isMirror}
             onChange={handleCheckBoxChange}
             
           />
-          Mirror Camera
+           Mirror Camera
         </label>
       </div>
 
@@ -255,6 +292,7 @@ export default function Camera() {
         </button>
 
         <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#333',marginTop:10 }}>{statusCapturingFrame}</p>
+        <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#333',marginTop:10 }}>{statusMirror}</p>
       </div>
       
      

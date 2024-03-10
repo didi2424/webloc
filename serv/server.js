@@ -45,7 +45,6 @@ wss.on("connection", (ws) => {
   });
 });
 
-// Start the server
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, "192.168.1.6", () => {
   console.log(`Server running on https://192.168.1.6:${PORT}`);

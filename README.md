@@ -6,11 +6,13 @@ Node v20.11.1
 
 React Js
 
+![Example Image](./img/img.jpg)
+
 ## Feature
 - full hd
 - no watermark
 - mirror camera
-- change/select camera
+- switch camera
 - start and stop streaming 
 - support many phone 
 - low latency
@@ -20,7 +22,48 @@ React Js
     ```bash
     npm i 
     ```
+2. You need check wss Websoket URL on cameraon.tsx line 184 to Local IP-address
 
+    ```bash
+    const startWebSocket = useCallback(() => { 
+
+    socketRef.current = new WebSocket('wss://192.168.1.4:3001'); //change here
+
+    socketRef.current.onopen = () => {
+      console.log('WebSocket connected');
+      setStatusNetwork('connected');
+    };
+
+    socketRef.current.onerror = () => {
+      console.error('WebSocket connection error');
+      setStatusNetwork('disconnected');
+    };
+    }, [])
+   ```
+3. You need check wss Websoket URL on index.html line 11 to Local IP-address
+
+    ```bash
+    <img id="imageElement" width="1158" height="1543">
+    <script>
+        const socket = new WebSocket('wss://192.168.1.4:3001'); //change here
+        const imageElement = document.getElementById('imageElement');
+
+        socket.onopen = () => {
+            console.log('WebSocket connected on the client side');
+        };
+
+        const blobUrls = [];
+
+        socket.onmessage = (event) => {
+    const message = event.data;
+
+    if (message === 'revokeBlobURL') {
+        handleRevokeBlobURL();
+    } else {
+        handleNormalMessage(message);
+    }
+    };
+    ```
 
 ## Usage
 

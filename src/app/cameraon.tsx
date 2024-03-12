@@ -181,7 +181,7 @@ export default function Camera() {
 
   const startWebSocket = useCallback(() => {
 
-    socketRef.current = new WebSocket('wss://192.168.1.6:3001');
+    socketRef.current = new WebSocket('wss://192.168.1.4:3001'); //change here
 
     socketRef.current.onopen = () => {
       console.log('WebSocket connected');

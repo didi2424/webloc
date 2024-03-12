@@ -68,5 +68,5 @@ wss.on("connection", (ws) => {
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, localIPAddress, () => {
-  console.log(`Server running on https://192.168.1.6:${PORT}`);
+  console.log(`Server running on ${localIPAddress}:${PORT}`);
 });

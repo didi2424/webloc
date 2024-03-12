@@ -28,7 +28,7 @@ export default function Camera() {
     setIsMirror(!isMirror);
     clearCanvas();
   }, [isMirror]);
-  
+
   const startWebSocket = useCallback(() => {
     socketRef.current = new WebSocket("wss://192.168.1.4:3001"); //change here
     socketRef.current.onopen = () => {
@@ -45,7 +45,6 @@ export default function Camera() {
   const stopWebSocket = useCallback(() => {
     setIsConnected(false);
     setStatusNetwork("disconnected");
-    // Clear the existing timeout
     if (captureTimeout) {
       clearTimeout(captureTimeout);
       setCaptureTimeout(undefined);

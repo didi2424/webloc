@@ -1,3 +1,7 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Node.js Version](https://img.shields.io/badge/Node.js-v20.11.1-green)
+![React.js Version](https://img.shields.io/badge/React-v18-blue)
+
 This project is a Webcam For PC using a Phone.
 
 © Dimas Kurniawan

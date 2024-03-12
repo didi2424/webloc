@@ -22,7 +22,7 @@ React Js
     ```bash
     npm i 
     ```
-2. You need check wss Websoket URL on cameraon.tsx line 184 to Local IP-address
+2. You need check wss Websoket URL on cameraon.tsx line 33 to Local IP-address
 
     ```bash
     const startWebSocket = useCallback(() => { 
